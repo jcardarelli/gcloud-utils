@@ -1,0 +1,43 @@
+#!/bin/bash
+# dataflow-parse-job-id
+# Description: Parse the different elements of Dataflow job IDs
+# Fri Jan 11 12:00:58 PST 2019
+
+JOB_ID_INPUT1="2018-10-05_07_32_17-13367145407327682220"
+JOB_ID_INPUT2="2017-12-05_07_32_17-12369485347417680320"
+
+error() {
+	local timeformat='%Y-%m-%dT%H:%M:%S%z'
+  echo "[$(date +${timeformat})] [ERROR]: $@" >&2
+}
+
+parse_job_id() {
+	local job_id_input="$1"
+  local replace_underscores="$(echo $job_id_input | sed 's/_/-/g')"
+	JOB_ID_YEAR="$(echo $replace_underscores | cut -d'-' -f 1)"
+	JOB_ID_MONTH="$(echo $replace_underscores | cut -d'-' -f 2)"
+	JOB_ID_DAY="$(echo $replace_underscores | cut -d'-' -f 3)"
+	JOB_ID_HOUR="$(echo $replace_underscores | cut -d'-' -f 4)"
+	JOB_ID_MINUTE="$(echo $replace_underscores | cut -d'-' -f 5)"
+	JOB_ID_SECOND="$(echo $replace_underscores | cut -d'-' -f 6)"
+	JOB_ID="$(echo $replace_underscores | cut -d'-' -f 7)"
+}
+
+parse_job_id "$JOB_ID_INPUT1"
+
+echo $JOB_ID_YEAR
+echo $JOB_ID_MONTH
+echo $JOB_ID_DAY
+echo $JOB_ID_HOUR
+echo $JOB_ID_MINUTE
+echo $JOB_ID_SECOND
+echo $JOB_ID
+
+parse_job_id "$JOB_ID_INPUT2"
+echo $JOB_ID_YEAR
+echo $JOB_ID_MONTH
+echo $JOB_ID_DAY
+echo $JOB_ID_HOUR
+echo $JOB_ID_MINUTE
+echo $JOB_ID_SECOND
+echo $JOB_ID
