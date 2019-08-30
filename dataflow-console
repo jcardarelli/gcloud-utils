@@ -1,0 +1,58 @@
+#!/bin/bash
+# dataflow-console
+# Description: Use google-chrome binary to open multiple Dataflow consoles at once
+# Tue Apr 16 20:29:45 PDT 2019
+
+# Script Prereqs: 
+# - awk
+# - gcloud
+# - google-chrome
+# - grep
+
+# Required input variables
+INPUT_REGEX="$1"
+DF_JOB_STATE="$2"
+
+# Configuration variables
+GCLOUD_LIMIT=${3:-1000}
+GCLOUD_PAGE_SIZE=${3:-1000}
+GCLOUD_PROJECT="$(gcloud config list --format="value[](core.project)")"
+GCLOUD_TOKEN="$(cat $(gcloud config list --format="value[](auth.authorization_token_file)"))"
+
+error() {
+  local timeformat='%Y-%m-%dT%H:%M:%S%z'
+  echo "[$(date +${timeformat})] [ERROR]: $@" >&2
+  exit 1
+}
+
+get_df_jobs_regex() {
+  gcloud dataflow jobs list \
+  --page-size=${GCLOUD_PAGE_SIZE} \
+  --limit=${GCLOUD_LIMIT} \
+  --format="csv[](JOB_ID,NAME,TYPE,CREATION_TIME,STATE,REGION)" \
+  | grep $INPUT_REGEX
+}
+
+main() {
+  local df_console_urls=()
+  local df_job_ids=$(get_df_jobs_regex | awk -v df_job_state="$DF_JOB_STATE" 'BEGIN {FS=","} $5 ~ df_job_state {print $1}')
+  if [[ $df_job_ids == "" ]]; then
+    error "Searched $GCLOUD_PAGE_SIZE entries, but could not find any Dataflow job IDs matching state: $DF_JOB_STATE"
+  fi
+
+  # Loop over Dataflow job IDs and build URL array
+  for job in $df_job_ids; do
+    local df_console_url="https://console.cloud.google.com/dataflow/jobsDetail/locations/us-central1/jobs/${job}?project=${GCLOUD_PROJECT}&token=${GCLOUD_TOKEN}"
+    df_console_urls+=("$df_console_url")
+  done
+
+  # Open array of URLs with Chrome
+  google-chrome "${df_console_urls[@]}"
+}
+
+if [[ $# -lt 2 ]]; then
+  error "Please specify a regex value as the first argument, and the job state you'd like to search for as the second argument. Valid states are: Done, Canceled, Failed."
+elif [[ $# -lt 3 ]]; then
+  echo "Using default --limit of $GCLOUD_LIMIT and --page-size of $GCLOUD_PAGE_SIZE"
+fi
+main
