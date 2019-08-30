@@ -1,0 +1,29 @@
+#!/bin/bash
+# create-cloudsql-postgres
+# Description: Create a Cloud SQL PostgreSQL instance
+# Thu Apr 25 12:12:24 PDT 2019
+
+INSTANCE_NAME="$1"
+NUM_CPU=2
+NUM_MEM="3840MiB"
+REGION="us-central1"
+
+error() {
+	local timeformat='%Y-%m-%dT%H:%M:%S%z'
+  echo "[$(date +${timeformat})] [ERROR]: $@" >&2
+	exit 1
+}
+
+if [[ $# -eq 1 ]]; then
+	gcloud sql instances create $INSTANCE_NAME \
+		--database-version=POSTGRES_9_6 \
+		--cpu=$NUM_CPU \
+		--memory=$NUM_MEM \
+		--region=$REGION \
+
+	if [[ $? -ne 0 ]]; then
+		error "Failed to create Cloud SQL Postgres instance"
+	fi
+else
+	error "Please enter the instance name as the first argument"
+fi
