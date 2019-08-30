@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# Pull cloud-sdk from google docker repo, and configure gcloud auth
+
+docker pull google/cloud-sdk:latest
+docker run -ti --name gcloud-config google/cloud-sdk gcloud auth login
