@@ -7,43 +7,43 @@ PROJECT_NAME="$1"
 MY_BUCKET="${PROJECT_NAME}_bucket"
 
 copy_scripts() {
-	echo "Copying bootstrap script to bucket"
-	gsutil cp dataproc-initialization-actions/conda/bootstrap-conda.sh gs://$MY_BUCKET/
-	gsutil cp dataproc-initialization-actions/conda/install-conda-env.sh gs://$MY_BUCKET/
+  echo "Copying bootstrap script to bucket"
+  gsutil cp dataproc-initialization-actions/conda/bootstrap-conda.sh gs://$MY_BUCKET/
+  gsutil cp dataproc-initialization-actions/conda/install-conda-env.sh gs://$MY_BUCKET/
 }
 
 main() {
-	echo "Clone dataproc-initialization-actions repo from Github"
-	git clone https://github.com/GoogleCloudPlatform/dataproc-initialization-actions.git
+  echo "Clone dataproc-initialization-actions repo from Github"
+  git clone https://github.com/GoogleCloudPlatform/dataproc-initialization-actions.git
 
-	echo "Check if bootstrap-conda.sh exists in $MY_BUCKET"
-	gsutil ls "gs://$MY_BUCKET/bootstrap-conda.sh"
-	if [[ $? -eq 0 ]]; then
-		copy_scripts
-	else
-		echo "Creating bucket $MY_BUCKET"
-		gsutil mb "gs://$MY_BUCKET"
-		copy_scripts
-	fi
+  echo "Check if bootstrap-conda.sh exists in $MY_BUCKET"
+  gsutil ls "gs://$MY_BUCKET/bootstrap-conda.sh"
+  if [[ $? -eq 0 ]]; then
+    copy_scripts
+  else
+    echo "Creating bucket $MY_BUCKET"
+    gsutil mb "gs://$MY_BUCKET"
+    copy_scripts
+  fi
 
-	echo "Creating Dataproc cluster with initialization actions"
-	gcloud dataproc clusters create $PROJECT_NAME \
-		--initialization-actions gs://$MY_BUCKET/bootstrap-conda.sh,gs://$MY_BUCKET/install-conda-env.sh \
-		--metadata MINICONDA_VERSION=latest \
-		--verbosity=debug
+  echo "Creating Dataproc cluster with initialization actions"
+  gcloud dataproc clusters create $PROJECT_NAME \
+    --initialization-actions gs://$MY_BUCKET/bootstrap-conda.sh,gs://$MY_BUCKET/install-conda-env.sh \
+    --metadata MINICONDA_VERSION=latest \
+    --verbosity=debug
 
-	# check for errors
-	if [[ $? -eq 0 ]]; then
-		echo "The Dataproc cluster was successfully created"
-		gcloud dataproc clusters list --filter="clusterName:${PROJECT_NAME}"
-	else
-		echo "There was an error creating the Dataproc cluster"
-	fi
+  # check for errors
+  if [[ $? -eq 0 ]]; then
+    echo "The Dataproc cluster was successfully created"
+    gcloud dataproc clusters list --filter="clusterName:${PROJECT_NAME}"
+  else
+    echo "There was an error creating the Dataproc cluster"
+  fi
 }
 
 if [[ $# -eq 1 ]]; then
-	main
+  main
 else
-	echo "ERROR: Enter the GCP project name as the first argument"
-	exit 1
+  echo "ERROR: Enter the GCP project name as the first argument"
+  exit 1
 fi
