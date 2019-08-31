@@ -6,13 +6,13 @@ JOB_ID="$1"
 SEARCH_STR="$2"
 
 error() {
-	local timeformat='%Y-%m-%dT%H:%M:%S%z'
+  local timeformat='%Y-%m-%dT%H:%M:%S%z'
   echo "[$(date +${timeformat})] [ERROR]: $@" >&2
-	exit 1
+  exit 1
 }
 
 if [[ $# -ne 2 ]]; then
-	error "Please enter the Dataflow job ID as the first argument"
+  error "Please enter the Dataflow job ID as the first argument"
 fi
 
 gcloud logging read "resource.type=dataflow_step AND resource.labels.job_id=\"$JOB_ID\" AND severity>=INFO \"$SEARCH_STR\""
